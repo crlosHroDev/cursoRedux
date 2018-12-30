@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import {connect} from 'react-redux';
+import {List as list} from 'immutable';
+import {bindActionCreators} from 'redux';
 import HomeLayout from '../components/home-layout';
 import Categories from '../../categories/components/categories';
 import Related from '../components/related';
@@ -7,21 +9,24 @@ import ModalContainer from '../../widgets/containers/modal';
 import Modal from '../../widgets/components/modal';
 import HandleError from '../../error/containers/handle-error';
 import VideoPlayer from '../../player/containers/video-player';
+import * as actions from '../../actions/index'
 
 class Home extends Component {
-  state = {
-    modalVisible: false,
-  }
-  handleOpenModal = (media) => {
-    this.setState({
-      modalVisible: true,
-      media
-    })
+  // state = {
+  //   modalVisible: false,
+  // }
+  handleOpenModal = (id) => {
+    // this.setState({
+    //   modalVisible: true,
+    //   media
+    // })
+    this.props.actions.openModal(id)
   }
   handleCloseModal = (event) => {
-    this.setState({
-      modalVisible: false,
-    })
+    // this.setState({
+    //   modalVisible: false,
+    // })
+    this.props.actions.closeModal()
   }
   render() {
     return (
@@ -34,15 +39,16 @@ class Home extends Component {
             search={this.props.search}
           />
           {
-            this.state.modalVisible &&
+            this.props.modal.get('visibility') &&
             <ModalContainer>
               <Modal
                 handleClick={this.handleCloseModal}
               >
                 <VideoPlayer
                   autoplay
-                  src={this.state.media.src}
-                  title={this.state.media.title}
+                  id={this.props.modal.get('mediaId')}
+                  // src={this.state.media.src}
+                  // title={this.state.media.title}
                 />
               </Modal>
             </ModalContainer>
@@ -54,10 +60,27 @@ class Home extends Component {
 }
 
 function mapStateToProps(state,props){
+  const categories=state.get('data').get('categories').map((categoryId)=>{
+    return state.get('data').get('entities').get('categories').get(categoryId)
+  })
+  let searchResults=list()
+  const search=state.get('data').get('search')
+  if(search){
+    const mediaList=state.get('data').get('entities').get('media')
+    searchResults=mediaList.filter((item)=>{
+      return item.get('author').toString().toLowerCase().includes(search.toString().toLowerCase())
+    }).toList()
+  }
   return {
-    categories:state.data.categories,
-    search:state.search
+    categories:categories,
+    search:searchResults,
+    modal:state.get('modal')
   }
 }
 
-export default connect(mapStateToProps)(Home)
+function mapDispatchToProps(dispatch){
+  return{
+    actions:bindActionCreators(actions,dispatch)
+  }
+}
+export default connect(mapStateToProps,mapDispatchToProps)(Home)
