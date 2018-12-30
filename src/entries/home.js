@@ -6,7 +6,10 @@ import reducer from '../reducers/data';
 import Home from '../pages/containers/home';
 // import Playlist from './src/playlist/components/playlist';
 import data from '../api.json';
+import normalizedData from '../schemas/index';
 // console.log('Hola mundo!' )
+
+console.log(normalizedData)
 
 const initialState={
     data:{
